@@ -10,7 +10,7 @@ int parsear_comando(char* cadena, char* arg[]);
  */
 void mostrar_prompt(char* cadena) {
 	printf ("> ");
-	scanf("%[^\n]", cadena);
+	scanf("%[^\n]", &cadena);
 }
 
 
