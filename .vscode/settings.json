@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "unistd.h": "c",
-        "wait.h": "c"
+        "wait.h": "c",
+        "types.h": "c",
+        "utiles.h": "c"
     }
 }
