@@ -30,7 +30,7 @@ int parsear_comando(char* cadena, char* arg[]) {
 
    while (ptrToken != NULL) {
 		arg[cont] = ptrToken;
-      printf("Arg[%d]: %s \n",cont, arg[cont]);
+    //  printf("Arg[%d]: %s \n",cont, arg[cont]);
 		cont++;
 		ptrToken = strtok(NULL, " "); //obtengo el siguiente token		
    }
