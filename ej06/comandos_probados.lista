@@ -1,0 +1,7 @@
+ls
+ls -r
+ls -l
+ls -l | grep .c
+cat archivo_inexistente && ls -l
+ps q || ls -l
+ps g && ls -l

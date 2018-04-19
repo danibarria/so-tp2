@@ -12,13 +12,28 @@
 #define XOR "||"
 #define AND "&&" 
 
+#define PARSE_PROG_0  primer_comando[0] = strcat(ruta, tokens[0]);//a la cadena /bin/ le agrega el nombre de un ruta al final // primer_comando[1] = NULL;
+#define PARSE_ARGS_0  primer_comando[1]= tokens[1];  
+#define PARSE_PROG_1  segundo_comando[1] = tokens[3];
+#define PARSE_ARGS_1  segundo_comando[2] = tokens[4];
+#define PARSE_PROG_2  segundo_comando[0] = strcat(ruta2,tokens[2]);
+
+#define ES_AND_1  (strcmp(tokens[1], AND))
+#define ES_PIPE_1 (strcmp(tokens[1], PIPE))
+#define ES_XOR_1  (strcmp(tokens[1], XOR))
+
+#define ES_AND_2  (strcmp(tokens[2], AND))
+#define ES_PIPE_2 (strcmp(tokens[2], PIPE))
+#define ES_XOR_2  (strcmp(tokens[2], XOR))
+
 int main(){
+    int fds[2];     //file descriptor    
     int resultado_ejecucion;
     int cantidad_tokens;
     int status;
     // comando es /bin/ls   // comando es completo ej: ls -l || exit(1)
-    char primer_programa[MAX]= BIN;
-    char segundo_programa[MAX] = BIN;
+    char ruta[MAX]= BIN;
+    char ruta2[MAX] = BIN;
     char *primer_comando[MAX] ;
     char *segundo_comando[MAX] ;
     char entrada[MAX];
@@ -26,21 +41,61 @@ int main(){
     /*todo comando: solo 1 argumento por simplicidad*/
     printf (">>>>> ");scanf("%[^\n]", &entrada);        
     cantidad_tokens = parsear_comando(entrada, tokens);        
-    primer_comando[0] = strcat(primer_programa, tokens[0]);//a la cadena /bin/ le agrega el nombre de un programa al final // primer_comando[1] = NULL;
-    if(cantidad_tokens>1){    
-        // strcat(primer_comando,tokens[1]);
-        primer_comando[1]= tokens[1];
-        primer_comando[2]= NULL;
-    }        
-    if(cantidad_tokens>2){
-        segundo_comando[0] = strcat(segundo_programa, tokens[3]); //une la cadena /bin/ y le agrega el nombre de un programa
-        if(cantidad_tokens>3){
-            segundo_comando[1] = tokens[4];
+    switch(cantidad_tokens){
+        case 1: //ls
+            PARSE_PROG_0
+            primer_comando[1]= NULL;
+        break;
+        case 2: //ls -l
+            PARSE_PROG_0
+            PARSE_ARGS_0
+            primer_comando[2]= NULL;
+        break;
+        case 3: // ls && pwd // tokens[1] es pipe o && o ||
+            PARSE_PROG_0           
+            PARSE_PROG_2
+            primer_comando[1] = NULL;
+            segundo_comando[1] = NULL;
+        break;
+        case 4: // ls -r | pwd
+            PARSE_PROG_0
+            PARSE_PROG_1
+            PARSE_ARGS_0
+            PARSE_ARGS_1
+            primer_comando[2] = NULL;
+            segundo_comando[1] = NULL;
+        break;
+        case 5: // grep asd | ls -r
+            PARSE_PROG_0
+            PARSE_PROG_1
+            PARSE_ARGS_0
+            PARSE_ARGS_1
+            primer_comando[2] = NULL;
             segundo_comando[2] = NULL;
-        }
-        int fds[2];     //file descriptor
-        if(!(strcmp(tokens[2], PIPE))){     //compara el tercer token con |  
-           
+        break;
+        default:
+            printf("invalido\n");
+        break;
+    };
+    
+    switch(cantidad_tokens){
+        //esto para hacer pipes, && y ||
+        case 1:
+        case 2:
+            if(fork() != 0){
+                waitpid(-1, &status,0);
+            }else{
+                resultado_ejecucion = execv(primer_comando[0], primer_comando );
+                if(resultado_ejecucion){
+                    printf("no es un comando valido\n");
+                }
+            }
+        break;
+        case 3:
+        break;
+        case 4:
+        case 5://para 4 y 5 son lo mismo, ambos son ls -l || pwd = simbolo en token[2] o grep c && man ls
+        if(!ES_PIPE_2){     //compara el tercer token con |       
             pipe(fds);
             if(fork() !=0){
                 close(1);               //cierra stdout
@@ -51,35 +106,42 @@ int main(){
                 dup(fds[0]);            //duplica stdin
                 resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
             }
-        }
-        
-        if(!(strcmp(tokens[2], XOR))){      //compara el tercer token con doble ||   // printf("es ||");
+        }       
+        if(!ES_XOR_2){      //compara el tercer token con doble ||   // 
+            printf("es ||");
             // pipe(fds);
             if(fork() !=0){
                 close(1);               //cierra stdout
                 dup(fds[1]);            //duplica stdout
-                resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
+                waitpid(-1,&status,0);
+                if(!(WEXITSTATUS(status))){
+                    resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
+                }                   
             }else{
                 close(0);               //cierra stdin
                 dup(fds[0]);            //duplica stdin
-                if(resultado_ejecucion)     //si fallo
-                    execv(primer_comando[0],primer_comando );
+                // resultado_ejecucion == 
+                execv(primer_comando[0],primer_comando );
             }
         }
-
-        if(!(strcmp(tokens[2], AND))){      //compara el tercer token con && // printf("es &&");
-        }
-            // else{printf("no es pipe");}
-    }else{ // 1 solo comando sin argumetnos
-        if(fork() != 0){
-            waitpid(-1, &status,0);
-        }else{
-            resultado_ejecucion = execv(primer_comando[0], primer_comando );
-            if(resultado_ejecucion){
-                printf("no es un comando valido");
+        if(!ES_AND_2){      //compara el tercer token con && // printf("es &&");
+            if(fork() !=0){
+                close(1);               //cierra stdout
+                dup(fds[1]);            //duplica stdout
+                if((WEXITSTATUS(status))){
+                    resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
+                }                   
+                waitpid(-1,&status,0);
+            }else{
+                close(0);               //cierra stdin
+                dup(fds[0]);            //duplica stdin
+                // resultado_ejecucion == 
+                execv(primer_comando[0],primer_comando );
             }
+        
         }
-    }
+        break;
+    };        
     return 0;
 }
 
@@ -92,20 +154,10 @@ c. Ejecutar condicionalmente un proceso dependiendo de la finalización de otro
 (ej: grep “cadena” archivo && ls).
 Nota: ​ Para resolver el ejercicio debe investigar las llamadas al sistema fork, exec, dup, pipe,
 entre otras.
-
-
-ver si es un 
-es comando invalido  0
-comando comun 1
-con pipe 2 
-con && 3 
-o con || 4
 */
-
- // strcat(segundo_comando, tokens[3]);
-            // tokens[0] = primer programa
-            // tokens[1] = argumentos primer programa
-            // tokens[2] = || , | , &&
-            // tokens[3] = segundo programa
-            // tokens[4] = argumentos segundo programa
+// tokens[0] = primer ruta
+// tokens[1] = argumentos primer ruta
+// tokens[2] = || , | , &&
+// tokens[3] = segundo ruta
+// tokens[4] = argumentos segundo ruta
            

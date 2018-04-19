@@ -1,37 +1,16 @@
 #include <stdio.h>
 #include <string.h>
-
 #include <unistd.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "utiles.h"
-
-#define MAX 20
-#define BIN "/bin/"
-#define PIPE "|"
-#define XOR "||"
-#define AND "&&" 
-
-#define PARSE_PROG_0  primer_comando[0] = strcat(ruta, tokens[0]);//a la cadena /bin/ le agrega el nombre de un ruta al final // primer_comando[1] = NULL;
-#define PARSE_ARGS_0  primer_comando[1]= tokens[1];  
-#define PARSE_PROG_1  segundo_comando[1] = tokens[3];
-#define PARSE_ARGS_1  segundo_comando[2] = tokens[4];
-#define PARSE_PROG_2  segundo_comando[0] = strcat(ruta2,tokens[2]);
-
-#define ES_AND_1  (strcmp(tokens[1], AND))
-#define ES_PIPE_1 (strcmp(tokens[1], PIPE))
-#define ES_XOR_1  (strcmp(tokens[1], XOR))
-
-#define ES_AND_2  (strcmp(tokens[2], AND))
-#define ES_PIPE_2 (strcmp(tokens[2], PIPE))
-#define ES_XOR_2  (strcmp(tokens[2], XOR))
 
 int main(){
     int fds[2];     //file descriptor    
     int resultado_ejecucion;
     int cantidad_tokens;
-    int status;
-    // comando es /bin/ls   // comando es completo ej: ls -l || exit(1)
+    int status;// comando es /bin/ls   // comando es completo ej: ls -l || exit(1)
     char ruta[MAX]= BIN;
     char ruta2[MAX] = BIN;
     char *primer_comando[MAX] ;
@@ -41,7 +20,7 @@ int main(){
     /*todo comando: solo 1 argumento por simplicidad*/
     printf (">>>>> ");scanf("%[^\n]", &entrada);        
     cantidad_tokens = parsear_comando(entrada, tokens);        
-    switch(cantidad_tokens){
+    switch(cantidad_tokens){//acomoda los comandos en los arreglos
         case 1: //ls
             PARSE_PROG_0
             primer_comando[1]= NULL;
@@ -78,8 +57,7 @@ int main(){
         break;
     };
     
-    switch(cantidad_tokens){
-        //esto para hacer pipes, && y ||
+    switch(cantidad_tokens){ //esto para hacer pipes, && y ||
         case 1:
         case 2:
             if(fork() != 0){
@@ -91,11 +69,11 @@ int main(){
                 }
             }
         break;
-        case 3:
+        case 3://TODO: ej pwd && ls
         break;
         case 4:
         case 5://para 4 y 5 son lo mismo, ambos son ls -l || pwd = simbolo en token[2] o grep c && man ls
-        if(!ES_PIPE_2){     //compara el tercer token con |       
+        if(ES_PIPE_2){     //compara el tercer token con |       
             pipe(fds);
             if(fork() !=0){
                 close(1);               //cierra stdout
@@ -107,57 +85,30 @@ int main(){
                 resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
             }
         }       
-        if(!ES_XOR_2){      //compara el tercer token con doble ||   // 
-            printf("es ||");
-            // pipe(fds);
+        if(ES_XOR_2){      //compara el tercer token con doble ||   // 
             if(fork() !=0){
-                close(1);               //cierra stdout
-                dup(fds[1]);            //duplica stdout
                 waitpid(-1,&status,0);
-                if(!(WEXITSTATUS(status))){
-                    resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
-                }                   
+                if((WEXITSTATUS(status))){// fallo, se ejecuta //printf("es || %d \n", status);                    
+                    execv(segundo_comando[0],segundo_comando );
+                }
             }else{
-                close(0);               //cierra stdin
-                dup(fds[0]);            //duplica stdin
-                // resultado_ejecucion == 
                 execv(primer_comando[0],primer_comando );
             }
         }
-        if(!ES_AND_2){      //compara el tercer token con && // printf("es &&");
-            if(fork() !=0){
-                close(1);               //cierra stdout
-                dup(fds[1]);            //duplica stdout
-                if((WEXITSTATUS(status))){
-                    resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
-                }                   
+        if(ES_AND_2){      //compara el tercer token con && // printf("es &&");
+            if(fork() !=0){    
                 waitpid(-1,&status,0);
-            }else{
-                close(0);               //cierra stdin
-                dup(fds[0]);            //duplica stdin
-                // resultado_ejecucion == 
+                if(!(WEXITSTATUS(status))){//no falla, se ejecuta
+                    execv(segundo_comando[0],segundo_comando );
+                }          
+            }else{              
                 execv(primer_comando[0],primer_comando );
-            }
-        
+            }       
         }
         break;
     };        
     return 0;
 }
 
-/***
- * 06. Desarrolle su propia terminal (un shell) que implemente las siguientes funcionalidades:
-a. Ejecutar procesos con sus argumentos.
-b. Permitir conectar la salida estándar de un proceso con la entrada estándar de otro
-(ej: ps | grep “bash”).
-c. Ejecutar condicionalmente un proceso dependiendo de la finalización de otro
-(ej: grep “cadena” archivo && ls).
-Nota: ​ Para resolver el ejercicio debe investigar las llamadas al sistema fork, exec, dup, pipe,
-entre otras.
-*/
-// tokens[0] = primer ruta
-// tokens[1] = argumentos primer ruta
-// tokens[2] = || , | , &&
-// tokens[3] = segundo ruta
-// tokens[4] = argumentos segundo ruta
+
            
