@@ -23,7 +23,7 @@ int parsear_comando(char* cadena, char* arg[]) {
    char *comando;
    int cont=0;
    
-   printf("La cadena es: %s \n", cadena);
+//    printf("La cadena es: %s \n", cadena);
           
    ptrToken = strtok(cadena, " "); //obtengo el primer token
    comando = ptrToken;
