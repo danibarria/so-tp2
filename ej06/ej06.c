@@ -6,32 +6,39 @@
 #include <sys/wait.h>
 #include "utiles.h"
 
-#define MAX 15
+#define MAX 20
+#define BIN "/bin/"
 
 int parsear_comando(char* cadena, char* arg[]);
 
 int main(){
+    int resultado_ejecucion;
+    int cantidad_tokens;
     int status, cant_args=0;
-    char args[MAX];
+
+    char comando[MAX]= BIN;
+    char entrada[MAX];
     char *tokens[MAX];
 
-    // while(1){//por siempre hacer
-        printf ("> ");
-	    scanf("%[^\n]", &args);
+    while(1){//por siempre hacer
+        printf (">>>>> ");scanf("%[^\n]", &entrada);
         
-        /*aca parsear*/
-        // parsear_comando(char* cadena, char* arg[])
-        parsear_comando(args, tokens);
-        /**/
-        // printf("%d",cant_args);
-        // if(fork() != 0){
-            // waitpid(-1, &status,0);
-        // }else{
+        cantidad_tokens = parsear_comando(entrada, tokens);
+        
+        if(fork() != 0){
+            waitpid(-1, &status,0);
+                    // scanf("%s",&entrada);
+        }else{
             /*aca ejecutar*/
-            // execv("/bin/bash", NULL);
-        // }
-    // }
-
+            strcat(comando, tokens[0]);
+            resultado_ejecucion = execl(comando,comando,NULL );
+                    // scanf("%s",&entrada);
+            if(resultado_ejecucion){
+                printf("no es un comando valido");
+            }
+        }
+        scanf("%d",&status);
+    }
     return 0;
 }
 
@@ -46,7 +53,21 @@ Nota: ​ Para resolver el ejercicio debe investigar las llamadas al sistema for
 entre otras.
 
 
-ver si es un comando
+ver si es un 
+es comando invalido
+comando comun
+con pipe
+con && 
+o con ||
+
+
 
 
 */
+
+int esComando(){
+    /***
+     * si es comando devuelve 0, sino otro numero
+     * 
+     * */
+}
