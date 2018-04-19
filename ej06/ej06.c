@@ -54,6 +54,17 @@ int main(){
         }
         
         if(!(strcmp(tokens[2], XOR))){      //compara el tercer token con doble ||   // printf("es ||");
+            // pipe(fds);
+            if(fork() !=0){
+                close(1);               //cierra stdout
+                dup(fds[1]);            //duplica stdout
+                resultado_ejecucion = execv(segundo_comando[0],segundo_comando );
+            }else{
+                close(0);               //cierra stdin
+                dup(fds[0]);            //duplica stdin
+                if(resultado_ejecucion)     //si fallo
+                    execv(primer_comando[0],primer_comando );
+            }
         }
 
         if(!(strcmp(tokens[2], AND))){      //compara el tercer token con && // printf("es &&");
