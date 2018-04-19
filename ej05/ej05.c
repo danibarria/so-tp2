@@ -11,8 +11,6 @@
 #define MAX 50
 #define TIEMPO 15
 
-
-
 void sigalrm_handler(int);
 void formulario();
 
@@ -46,7 +44,6 @@ int main(){
     }
     return 0;
 }
-
 
 void sigalrm_handler(int sig)
 {
