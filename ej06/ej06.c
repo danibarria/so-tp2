@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <signal.h>
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -8,8 +8,9 @@
 
 #define MAX 20
 #define BIN "/bin/"
-
-int parsear_comando(char* cadena, char* arg[]);
+#define PIPE "|"
+#define XOR "||"
+#define AND "&&" 
 
 int main(){
     int resultado_ejecucion;
@@ -20,24 +21,31 @@ int main(){
     char entrada[MAX];
     char *tokens[MAX];
 
-    while(1){//por siempre hacer
-        printf (">>>>> ");scanf("%[^\n]", &entrada);
+    printf (">>>>> ");scanf("%[^\n]", &entrada);    
+    cantidad_tokens = parsear_comando(entrada, tokens);
+    /*todo comando: solo 1 argumento por simplicidad*/
         
-        cantidad_tokens = parsear_comando(entrada, tokens);
-        
+    strcat(comando, tokens[0]);//a la cadena /bin/ le agrega un programa al final
+    if(cantidad_tokens>2){
+        if(!(strcmp(tokens[2], PIPE))){     //compara el tercer token con |
+            printf("es pipe");
+        }
+        if(!(strcmp(tokens[2], XOR))){      //compara el tercer token con doble ||
+            printf("es ||");
+        }
+        if(!(strcmp(tokens[2], AND))){      //compara el tercer token con &&
+            printf("es &&");
+        }
+            // else{printf("no es pipe");}
+    }else{
         if(fork() != 0){
             waitpid(-1, &status,0);
-                    // scanf("%s",&entrada);
         }else{
-            /*aca ejecutar*/
-            strcat(comando, tokens[0]);
             resultado_ejecucion = execl(comando,comando,NULL );
-                    // scanf("%s",&entrada);
             if(resultado_ejecucion){
                 printf("no es un comando valido");
             }
         }
-        scanf("%d",&status);
     }
     return 0;
 }
@@ -54,20 +62,9 @@ entre otras.
 
 
 ver si es un 
-es comando invalido
-comando comun
-con pipe
-con && 
-o con ||
-
-
-
-
+es comando invalido  0
+comando comun 1
+con pipe 2 
+con && 3 
+o con || 4
 */
-
-int esComando(){
-    /***
-     * si es comando devuelve 0, sino otro numero
-     * 
-     * */
-}
