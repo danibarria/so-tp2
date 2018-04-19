@@ -20,9 +20,9 @@ int main() {
     {
         printf("\nPADRE\n");
         waitpid(-1, &status,0);
-    }else{
+    }else{/* Código del hijo */
         printf("\n%d\n", execv( args[0], args));
-    }/* Código del hijo */  
+    }  
     
     return 0;
 }   
