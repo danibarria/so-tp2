@@ -35,5 +35,5 @@ int parsear_comando(char* cadena, char* arg[]) {
 		ptrToken = strtok(NULL, " "); //obtengo el siguiente token		
    }
    
-   return 0;
+   return cont;
 }
