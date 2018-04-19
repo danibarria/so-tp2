@@ -34,6 +34,6 @@ int parsear_comando(char* cadena, char* arg[]) {
 		cont++;
 		ptrToken = strtok(NULL, " "); //obtengo el siguiente token		
    }
-   
+   //modificado parsear comando devuelve cantidad de tokens
    return cont;
 }
