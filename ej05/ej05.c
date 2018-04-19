@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#define MENSAJE_SALIR "para salir ejecutar EXIT"
 #define MENSAJE_USUARIO "ingrese nombre de usuario"
 #define MENSAJE_CONTRASENA "ingrese contrasena"
 #define MAX 50
@@ -25,6 +26,7 @@ int main(){
     while(1){
         flag = 0;
         contador = TIEMPO;
+        printf("%s:",  MENSAJE_SALIR);
 
         signal(SIGALRM,sigalrm_handler);    
         printf("%s:",  MENSAJE_USUARIO);
